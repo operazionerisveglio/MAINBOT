@@ -23,7 +23,7 @@ DATABASE_URL = os.getenv('DATABASE_URL')  # URL database PostgreSQL
 # CONFIGURAZIONE STRIPE
 # =============================================================================
 # ID del prodotto abbonamento creato su Stripe (sostituisci con il tuo)
-STRIPE_PRICE_ID = os.getenv('STRIPE_PRICE_ID', 'price_XXXXXXXXXXXXXXXXXX')
+STRIPE_PRICE_ID = os.getenv('STRIPE_PRICE_ID', 'price_1SbnGPAjq2QmGIcgPhSM2xy1')
 
 # Prezzo abbonamento (solo per riferimento, il prezzo reale è su Stripe)
 SUBSCRIPTION_PRICE_EUR = 20
