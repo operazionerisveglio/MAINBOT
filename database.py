@@ -26,7 +26,7 @@ def init_db():
     conn = get_connection()
     cur = conn.cursor()
     
-    # Tabella utenti
+    # Tabella utenti (AGGIUNTO: approved, approved_at, approved_by)
     cur.execute('''
         CREATE TABLE IF NOT EXISTS users (
             user_id BIGINT PRIMARY KEY,
@@ -41,8 +41,30 @@ def init_db():
             joined_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             last_activity TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             total_payments INTEGER DEFAULT 0,
-            notes TEXT
+            notes TEXT,
+            approved BOOLEAN DEFAULT FALSE,
+            approved_at TIMESTAMP,
+            approved_by BIGINT
         )
+    ''')
+    
+    # Aggiungi colonna approved se non esiste (per database esistenti)
+    cur.execute('''
+        DO $$ 
+        BEGIN
+            IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                          WHERE table_name='users' AND column_name='approved') THEN
+                ALTER TABLE users ADD COLUMN approved BOOLEAN DEFAULT FALSE;
+            END IF;
+            IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                          WHERE table_name='users' AND column_name='approved_at') THEN
+                ALTER TABLE users ADD COLUMN approved_at TIMESTAMP;
+            END IF;
+            IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+                          WHERE table_name='users' AND column_name='approved_by') THEN
+                ALTER TABLE users ADD COLUMN approved_by BIGINT;
+            END IF;
+        END $$;
     ''')
     
     # Tabella pagamenti
@@ -158,6 +180,124 @@ def is_subscribed(user_id: int) -> bool:
     return user['subscription_end'] >= datetime.now().date()
 
 
+# =============================================================================
+# NUOVE FUNZIONI PER SISTEMA APPROVAZIONE
+# =============================================================================
+
+def is_approved(user_id: int) -> bool:
+    """Verifica se un utente è stato approvato (può abbonarsi)."""
+    user = get_user(user_id)
+    if not user:
+        return False
+    return user.get('approved', False)
+
+
+def set_pending(user_id: int):
+    """Imposta un utente come 'in attesa di approvazione'."""
+    conn = get_connection()
+    cur = conn.cursor()
+    
+    cur.execute('''
+        UPDATE users SET 
+            subscription_status = 'pending',
+            approved = FALSE
+        WHERE user_id = %s
+    ''', (user_id,))
+    
+    conn.commit()
+    conn.close()
+    logger.info(f"Utente {user_id} impostato come pending")
+
+
+def approve_user(user_id: int, approved_by: int):
+    """Approva un utente (può ora abbonarsi)."""
+    conn = get_connection()
+    cur = conn.cursor()
+    
+    cur.execute('''
+        UPDATE users SET 
+            approved = TRUE,
+            approved_at = CURRENT_TIMESTAMP,
+            approved_by = %s,
+            subscription_status = 'inactive'
+        WHERE user_id = %s
+    ''', (approved_by, user_id))
+    
+    conn.commit()
+    conn.close()
+    logger.info(f"Utente {user_id} approvato da {approved_by}")
+
+
+def reject_user(user_id: int, rejected_by: int):
+    """Rifiuta un utente."""
+    conn = get_connection()
+    cur = conn.cursor()
+    
+    cur.execute('''
+        UPDATE users SET 
+            approved = FALSE,
+            subscription_status = 'rejected',
+            notes = CONCAT(COALESCE(notes, ''), ' | Rifiutato il ', CURRENT_DATE::TEXT, ' da ', %s::TEXT)
+        WHERE user_id = %s
+    ''', (rejected_by, user_id))
+    
+    conn.commit()
+    conn.close()
+    logger.info(f"Utente {user_id} rifiutato da {rejected_by}")
+
+
+def get_pending_users() -> list:
+    """Recupera tutti gli utenti in attesa di approvazione."""
+    conn = get_connection()
+    cur = conn.cursor()
+    
+    cur.execute('''
+        SELECT * FROM users 
+        WHERE subscription_status = 'pending' 
+        AND approved = FALSE
+        ORDER BY joined_date ASC
+    ''')
+    
+    results = cur.fetchall()
+    conn.close()
+    
+    return [dict(r) for r in results]
+
+
+def get_user_by_username(username: str) -> dict:
+    """Recupera un utente dal suo username."""
+    conn = get_connection()
+    cur = conn.cursor()
+    
+    # Rimuovi @ se presente
+    username = username.lstrip('@')
+    
+    cur.execute('SELECT * FROM users WHERE LOWER(username) = LOWER(%s)', (username,))
+    result = cur.fetchone()
+    
+    conn.close()
+    return dict(result) if result else None
+
+
+def can_access_groups(user_id: int) -> bool:
+    """
+    Verifica se un utente può accedere ai gruppi premium.
+    Deve essere: approvato E con abbonamento attivo.
+    """
+    user = get_user(user_id)
+    if not user:
+        return False
+    
+    is_user_approved = user.get('approved', False)
+    is_user_subscribed = is_subscribed(user_id)
+    
+    return is_user_approved and is_user_subscribed
+
+
+# =============================================================================
+# FUNZIONI ABBONAMENTO (esistenti, non modificate)
+# =============================================================================
+
 def get_subscription_info(user_id: int) -> dict:
     """Recupera le informazioni dettagliate sull'abbonamento."""
     user = get_user(user_id)
@@ -172,7 +312,8 @@ def get_subscription_info(user_id: int) -> dict:
         'start_date': user['subscription_start'],
         'end_date': user['subscription_end'],
         'stripe_customer_id': user['stripe_customer_id'],
-        'total_payments': user['total_payments']
+        'total_payments': user['total_payments'],
+        'approved': user.get('approved', False)  # AGGIUNTO
     }
 
 
@@ -201,12 +342,13 @@ def activate_subscription(user_id: int, stripe_customer_id: str, stripe_subscrip
 
 
 def deactivate_subscription(user_id: int):
-    """Disattiva l'abbonamento di un utente."""
+    """Disattiva l'abbonamento di un utente (ma resta approvato!)."""
     conn = get_connection()
     cur = conn.cursor()
     
+    # NOTA: Non tocchiamo 'approved', l'utente può ri-abbonarsi senza nuova richiesta
     cur.execute('''
-        UPDATE users SET subscription_status = 'inactive'
+        UPDATE users SET subscription_status = 'expired'
         WHERE user_id = %s
     ''', (user_id,))
     
@@ -379,6 +521,10 @@ def get_stats() -> dict:
     ''')
     monthly_revenue = cur.fetchone()['revenue']
     
+    # AGGIUNTO: Utenti in attesa di approvazione
+    cur.execute("SELECT COUNT(*) as pending FROM users WHERE subscription_status = 'pending' AND approved = FALSE")
+    pending_users = cur.fetchone()['pending']
+    
     conn.close()
     
     return {
@@ -386,7 +532,8 @@ def get_stats() -> dict:
         'active_subscribers': active_subscribers,
         'new_users_week': new_users_week,
         'open_tickets': open_tickets,
-        'monthly_revenue': monthly_revenue / 100 if monthly_revenue else 0  # Converti da centesimi
+        'monthly_revenue': monthly_revenue / 100 if monthly_revenue else 0,
+        'pending_users': pending_users  # AGGIUNTO
     }
 
 

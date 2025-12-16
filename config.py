@@ -76,16 +76,29 @@ ADMIN_IDS = [
 ]
 
 # =============================================================================
+# CHAT ID PER NOTIFICHE STAFF (NUOVO)
+# =============================================================================
+# ID del gruppo staff admin dove inviare notifiche di nuove richieste
+# Imposta a None se non vuoi usare un gruppo (notifiche solo agli admin singoli)
+# Per ottenere l'ID: aggiungi @userinfobot al gruppo e scrivi /start
+
+STAFF_ADMIN_CHAT_ID = os.getenv('STAFF_ADMIN_CHAT_ID', None)
+if STAFF_ADMIN_CHAT_ID:
+    STAFF_ADMIN_CHAT_ID = int(STAFF_ADMIN_CHAT_ID)
+
+# =============================================================================
 # MESSAGGI DEL BOT
 # =============================================================================
 MESSAGES = {
     'welcome_new': """
 👋 *Benvenuto in Operazione Risveglio!*
 
-Sono il bot ufficiale della community. Ecco cosa puoi fare:
+Sono il bot ufficiale della community. 
 
-🔒 *CONTENUTI PREMIUM*
-Per accedere a tutti i contenuti esclusivi (Biblioteca, Salotto Quantico, Brainstorming) è necessario un abbonamento.
+🔒 *ACCESSO RISERVATO*
+Per accedere ai contenuti esclusivi è necessario:
+1️⃣ Richiedere l'accesso (verrà valutato dal team)
+2️⃣ Sottoscrivere un abbonamento mensile
 
 💰 *ABBONAMENTO*
 Solo 20€/mese per accesso illimitato a:
@@ -95,7 +108,7 @@ Solo 20€/mese per accesso illimitato a:
 • 📢 Comunicazioni ufficiali
 • 🎯 Supporto prioritario
 
-Usa i pulsanti qui sotto per navigare!
+👇 Clicca "Richiedi Accesso" per iniziare!
 """,
 
     'welcome_subscriber': """
@@ -112,6 +125,8 @@ Usa i pulsanti qui sotto per accedere ai contenuti premium:
 Ciao {name}, il tuo abbonamento è scaduto il {end_date}.
 
 Per continuare ad accedere ai contenuti premium, rinnova ora!
+
+💡 Essendo già membro approvato, puoi rinnovare subito senza nuova richiesta.
 """,
 
     'payment_success': """
@@ -138,6 +153,12 @@ Il pagamento è stato annullato. Se hai avuto problemi, contatta il supporto con
 /stato - Verifica il tuo abbonamento
 /supporto - Richiedi assistenza
 /help - Mostra questa guida
+
+*COMANDI ADMIN:*
+/admin - Dashboard amministratore
+/pending - Vedi richieste in attesa
+/approva @username - Approva un utente
+/rifiuta @username - Rifiuta un utente
 
 🏠 *Hub Principale:* @OperazioneRisveglioHub
 """,
