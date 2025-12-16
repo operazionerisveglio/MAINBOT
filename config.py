@@ -35,7 +35,7 @@ SUBSCRIPTION_PRICE_EUR = 20
 
 CHANNEL_LINKS = {
     'hub': 'https://t.me/OperazioneRisveglioHub',            # Pubblico
-    'comunicazioni': 'https://t.me/+INSERISCI_CODICE_QUI',   # Privato - Annunci
+    'comunicazioni': 'https://t.me/+eDycLemLgJViYzY0',   # Privato - Annunci
 }
 
 # =============================================================================
@@ -45,17 +45,17 @@ CHANNEL_LINKS = {
 # IMPORTANTE: Attiva "Approva nuovi membri" in questi gruppi!
 
 GROUP_LINKS = {
-    'biblioteca': 'https://t.me/+INSERISCI_CODICE_QUI',      # Download risorse
-    'salotto': 'https://t.me/+INSERISCI_CODICE_QUI',         # Condivisione esperienze
-    'brainstorming': 'https://t.me/+INSERISCI_CODICE_QUI',   # Feedback e idee
+    'biblioteca': 'https://t.me/+kkYRJIFhTfFjZmM8',      # Download risorse
+    'salotto': 'https://t.me/+GmeCma6o4-JhMGM0',         # Condivisione esperienze
+    'brainstorming': 'https://t.me/+89hE5BvuiRw2Yzg8',   # Feedback e idee
 }
 
 # =============================================================================
 # LINK GRUPPI STAFF (solo invito manuale, NON gestiti dal bot)
 # =============================================================================
 STAFF_LINKS = {
-    'staff_tecnico': 'https://t.me/+INSERISCI_CODICE_QUI',
-    'staff_admin': 'https://t.me/+INSERISCI_CODICE_QUI',
+    'staff_tecnico': 'https://t.me/+vFLBhBLx4T81ZGM0',
+    'staff_admin': 'https://t.me/+GQzZscckn19kNjU0',
 }
 
 # Tutti i link insieme (per comodità nel bot)
@@ -67,15 +67,15 @@ LINKS = {**CHANNEL_LINKS, **GROUP_LINKS}
 # Per ottenere l'ID: aggiungi @userinfobot al canale/gruppo e scrivi /start
 
 CHANNEL_IDS = {
-    'comunicazioni': -1001234567890,  # Sostituisci con ID reale
+    'comunicazioni':  -3397059711,  # Sostituisci con ID reale
 }
 
 GROUP_IDS = {
-    'biblioteca': -1001234567891,     # Sostituisci con ID reale
-    'salotto': -1001234567892,
-    'brainstorming': -1001234567893,
-    'staff_tecnico': -1001234567894,
-    'staff_admin': -1001234567895,
+    'biblioteca': -3435704855,     # Sostituisci con ID reale
+    'salotto': -3449899109,
+    'brainstorming': -3377524539,
+    'staff_tecnico': -3348195812,
+    'staff_admin': -3379647913,
 }
 
 # =============================================================================
@@ -85,7 +85,7 @@ GROUP_IDS = {
 # Per ottenere il tuo ID: scrivi a @userinfobot
 
 ADMIN_IDS = [
-    123456789,  # Sostituisci con il tuo user_id
+     1164635816,  # Sostituisci con il tuo user_id
     # Aggiungi altri admin qui
 ]
 
