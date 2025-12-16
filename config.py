@@ -39,10 +39,10 @@ LINKS = {
     'hub': 'https://t.me/OperazioneRisveglioHub',
     
     # Canali/Gruppi privati (link tipo t.me/+CODICE)
-    'comunicazioni': 'https://t.me/+INSERISCI_CODICE_QUI',
-    'biblioteca': 'https://t.me/+INSERISCI_CODICE_QUI',
-    'salotto': 'https://t.me/+INSERISCI_CODICE_QUI',
-    'brainstorming': 'https://t.me/+INSERISCI_CODICE_QUI',
+    'comunicazioni': 'https://t.me/+eDycLemLgJViYzY0',
+    'biblioteca': 'https://t.me/+kkYRJIFhTfFjZmM8',
+    'salotto': 'https://t.me/+GmeCma6o4-JhMGM0',
+    'brainstorming': 'https://t.me/+89hE5BvuiRw2Yzg8',
     
     # Gruppi staff (solo per admin)
     'staff_tecnico': 'https://t.me/+INSERISCI_CODICE_QUI',
@@ -71,7 +71,7 @@ GROUP_IDS = {
 # Per ottenere il tuo ID: scrivi a @userinfobot
 
 ADMIN_IDS = [
-    123456789,  # Sostituisci con il tuo user_id
+    1164635816,  # Sostituisci con il tuo user_id
     # Aggiungi altri admin qui
 ]
 
