@@ -29,35 +29,49 @@ STRIPE_PRICE_ID = os.getenv('STRIPE_PRICE_ID', 'price_XXXXXXXXXXXXXXXXXX')
 SUBSCRIPTION_PRICE_EUR = 20
 
 # =============================================================================
-# LINK DEI GRUPPI E CANALI
+# LINK DEI CANALI (solo 2: Hub e Comunicazioni)
 # =============================================================================
-# IMPORTANTE: Sostituisci questi link con quelli reali dei tuoi gruppi/canali
-# Per ottenere i link: apri il gruppo/canale > Impostazioni > Link di invito
+# I CANALI sono per comunicazioni one-to-many (solo admin postano)
 
-LINKS = {
-    # Canale pubblico (link pubblico tipo t.me/NomeCanale)
-    'hub': 'https://t.me/OperazioneRisveglioHub',
-    
-    # Canali/Gruppi privati (link tipo t.me/+CODICE)
-    'comunicazioni': 'https://t.me/+eDycLemLgJViYzY0',
-    'biblioteca': 'https://t.me/+kkYRJIFhTfFjZmM8',
-    'salotto': 'https://t.me/+GmeCma6o4-JhMGM0',
-    'brainstorming': 'https://t.me/+89hE5BvuiRw2Yzg8',
-    
-    # Gruppi staff (solo per admin)
+CHANNEL_LINKS = {
+    'hub': 'https://t.me/OperazioneRisveglioHub',            # Pubblico
+    'comunicazioni': 'https://t.me/+INSERISCI_CODICE_QUI',   # Privato - Annunci
+}
+
+# =============================================================================
+# LINK DEI GRUPPI (tutti gli altri)
+# =============================================================================
+# I GRUPPI permettono interazione (con Topics)
+# IMPORTANTE: Attiva "Approva nuovi membri" in questi gruppi!
+
+GROUP_LINKS = {
+    'biblioteca': 'https://t.me/+INSERISCI_CODICE_QUI',      # Download risorse
+    'salotto': 'https://t.me/+INSERISCI_CODICE_QUI',         # Condivisione esperienze
+    'brainstorming': 'https://t.me/+INSERISCI_CODICE_QUI',   # Feedback e idee
+}
+
+# =============================================================================
+# LINK GRUPPI STAFF (solo invito manuale, NON gestiti dal bot)
+# =============================================================================
+STAFF_LINKS = {
     'staff_tecnico': 'https://t.me/+INSERISCI_CODICE_QUI',
     'staff_admin': 'https://t.me/+INSERISCI_CODICE_QUI',
 }
 
+# Tutti i link insieme (per comodità nel bot)
+LINKS = {**CHANNEL_LINKS, **GROUP_LINKS}
+
 # =============================================================================
-# ID DEI GRUPPI (necessari per alcune operazioni del bot)
+# ID DEI CANALI E GRUPPI
 # =============================================================================
-# Per ottenere l'ID: aggiungi il bot @userinfobot al gruppo e scrivi /start
-# Oppure usa il bot @getidsbot
+# Per ottenere l'ID: aggiungi @userinfobot al canale/gruppo e scrivi /start
+
+CHANNEL_IDS = {
+    'comunicazioni': -1001234567890,  # Sostituisci con ID reale
+}
 
 GROUP_IDS = {
-    'comunicazioni': -1001234567890,  # Sostituisci con ID reale
-    'biblioteca': -1001234567891,
+    'biblioteca': -1001234567891,     # Sostituisci con ID reale
     'salotto': -1001234567892,
     'brainstorming': -1001234567893,
     'staff_tecnico': -1001234567894,
@@ -71,7 +85,7 @@ GROUP_IDS = {
 # Per ottenere il tuo ID: scrivi a @userinfobot
 
 ADMIN_IDS = [
-    1164635816,  # Sostituisci con il tuo user_id
+    123456789,  # Sostituisci con il tuo user_id
     # Aggiungi altri admin qui
 ]
 

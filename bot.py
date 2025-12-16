@@ -21,7 +21,11 @@ from telegram.ext import (
 )
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
-from config import BOT_TOKEN, LINKS, MESSAGES, ADMIN_IDS, RENEWAL_REMINDER_DAYS, STAFF_ADMIN_CHAT_ID
+from config import (
+    BOT_TOKEN, LINKS, CHANNEL_LINKS, GROUP_LINKS, MESSAGES, 
+    ADMIN_IDS, RENEWAL_REMINDER_DAYS, STAFF_ADMIN_CHAT_ID,
+    GROUP_IDS, CHANNEL_IDS
+)
 from database import (
     init_db, add_user, get_user, is_subscribed, get_subscription_info,
     activate_subscription, get_expiring_subscriptions, get_expired_subscriptions,
@@ -89,12 +93,14 @@ def get_main_keyboard(user_status: str) -> InlineKeyboardMarkup:
     """Genera la tastiera principale in base allo stato utente."""
     
     if user_status == 'subscribed':
-        # Utente approvato E abbonato
+        # Utente approvato E abbonato - mostra tutti gli accessi
         keyboard = [
-            [InlineKeyboardButton("💬 Salotto Quantico", url=LINKS['salotto'])],
-            [InlineKeyboardButton("📚 Biblioteca Digitale", url=LINKS['biblioteca'])],
-            [InlineKeyboardButton("💡 Brainstorming", url=LINKS['brainstorming'])],
-            [InlineKeyboardButton("📢 Comunicazioni", url=LINKS['comunicazioni'])],
+            # GRUPPI (con protezione "Approva nuovi membri")
+            [InlineKeyboardButton("💬 Salotto Quantico", url=GROUP_LINKS['salotto'])],
+            [InlineKeyboardButton("📚 Biblioteca Digitale", url=GROUP_LINKS['biblioteca'])],
+            [InlineKeyboardButton("💡 Brainstorming", url=GROUP_LINKS['brainstorming'])],
+            # CANALI (accesso diretto con link)
+            [InlineKeyboardButton("📢 Comunicazioni", url=CHANNEL_LINKS['comunicazioni'])],
             [
                 InlineKeyboardButton("📊 Il Mio Stato", callback_data='my_status'),
                 InlineKeyboardButton("🎫 Supporto", callback_data='support')
