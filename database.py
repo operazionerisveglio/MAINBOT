@@ -7,7 +7,7 @@ Questo modulo gestisce tutte le operazioni sul database PostgreSQL.
 import psycopg2
 from psycopg2.extras import RealDictCursor
 from datetime import datetime, timedelta
-from config import DATABASE_URL
+from config import DATABASE_URL, SUPER_ADMIN_ID
 import logging
 
 logger = logging.getLogger(__name__)
@@ -66,6 +66,27 @@ def init_db():
             END IF;
         END $$;
     ''')
+    
+    # ==========================================================================
+    # NUOVA TABELLA: Amministratori dinamici
+    # ==========================================================================
+    cur.execute('''
+        CREATE TABLE IF NOT EXISTS admins (
+            user_id BIGINT PRIMARY KEY,
+            username TEXT,
+            first_name TEXT,
+            added_by BIGINT,
+            added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            role TEXT DEFAULT 'admin'
+        )
+    ''')
+    
+    # Assicurati che il Super Admin sia sempre presente
+    cur.execute('''
+        INSERT INTO admins (user_id, role, added_by)
+        VALUES (%s, 'super_admin', %s)
+        ON CONFLICT (user_id) DO UPDATE SET role = 'super_admin'
+    ''', (SUPER_ADMIN_ID, SUPER_ADMIN_ID))
     
     # Tabella pagamenti
     cur.execute('''
@@ -128,6 +149,125 @@ def init_db():
 
 
 # =============================================================================
+# FUNZIONI GESTIONE ADMIN DINAMICI
+# =============================================================================
+
+def is_admin(user_id: int) -> bool:
+    """Verifica se l'utente è un amministratore (dal database)."""
+    if user_id == SUPER_ADMIN_ID:
+        return True
+    
+    conn = get_connection()
+    cur = conn.cursor()
+    
+    cur.execute('SELECT user_id FROM admins WHERE user_id = %s', (user_id,))
+    result = cur.fetchone()
+    
+    conn.close()
+    return result is not None
+
+
+def is_super_admin(user_id: int) -> bool:
+    """Verifica se l'utente è il Super Admin."""
+    return user_id == SUPER_ADMIN_ID
+
+
+def add_admin(user_id: int, added_by: int, username: str = None, first_name: str = None) -> bool:
+    """
+    Aggiunge un nuovo admin.
+    Restituisce True se aggiunto, False se già esistente.
+    """
+    if not is_super_admin(added_by):
+        logger.warning(f"Tentativo non autorizzato di aggiungere admin da {added_by}")
+        return False
+    
+    conn = get_connection()
+    cur = conn.cursor()
+    
+    try:
+        cur.execute('''
+            INSERT INTO admins (user_id, username, first_name, added_by)
+            VALUES (%s, %s, %s, %s)
+            ON CONFLICT (user_id) DO NOTHING
+            RETURNING user_id
+        ''', (user_id, username, first_name, added_by))
+        
+        result = cur.fetchone()
+        conn.commit()
+        conn.close()
+        
+        if result:
+            logger.info(f"Admin {user_id} aggiunto da {added_by}")
+            return True
+        else:
+            logger.info(f"Admin {user_id} già esistente")
+            return False
+    except Exception as e:
+        conn.rollback()
+        conn.close()
+        logger.error(f"Errore aggiunta admin: {e}")
+        return False
+
+
+def remove_admin(user_id: int, removed_by: int) -> bool:
+    """
+    Rimuove un admin.
+    Non si può rimuovere il Super Admin.
+    """
+    if not is_super_admin(removed_by):
+        logger.warning(f"Tentativo non autorizzato di rimuovere admin da {removed_by}")
+        return False
+    
+    if user_id == SUPER_ADMIN_ID:
+        logger.warning("Tentativo di rimuovere il Super Admin!")
+        return False
+    
+    conn = get_connection()
+    cur = conn.cursor()
+    
+    cur.execute('DELETE FROM admins WHERE user_id = %s AND role != %s', (user_id, 'super_admin'))
+    deleted = cur.rowcount > 0
+    
+    conn.commit()
+    conn.close()
+    
+    if deleted:
+        logger.info(f"Admin {user_id} rimosso da {removed_by}")
+    
+    return deleted
+
+
+def get_all_admins() -> list:
+    """Recupera la lista di tutti gli admin."""
+    conn = get_connection()
+    cur = conn.cursor()
+    
+    cur.execute('''
+        SELECT a.*, u.username as current_username, u.first_name as current_first_name
+        FROM admins a
+        LEFT JOIN users u ON a.user_id = u.user_id
+        ORDER BY a.added_at ASC
+    ''')
+    
+    results = cur.fetchall()
+    conn.close()
+    
+    return [dict(r) for r in results]
+
+
+def get_admin_ids() -> list:
+    """Recupera solo gli ID degli admin (per controlli veloci)."""
+    conn = get_connection()
+    cur = conn.cursor()
+    
+    cur.execute('SELECT user_id FROM admins')
+    results = cur.fetchall()
+    
+    conn.close()
+    return [r['user_id'] for r in results]
+
+
+# =============================================================================
 # FUNZIONI UTENTI
 # =============================================================================
 
@@ -181,7 +321,7 @@ def is_subscribed(user_id: int) -> bool:
 
 
 # =============================================================================
-# NUOVE FUNZIONI PER SISTEMA APPROVAZIONE
+# FUNZIONI PER SISTEMA APPROVAZIONE
 # =============================================================================
 
 def is_approved(user_id: int) -> bool:
@@ -295,7 +435,7 @@ def can_access_groups(user_id: int) -> bool:
 
 
 # =============================================================================
-# FUNZIONI ABBONAMENTO (esistenti, non modificate)
+# FUNZIONI ABBONAMENTO
 # =============================================================================
 
 def get_subscription_info(user_id: int) -> dict:
@@ -313,7 +453,7 @@ def get_subscription_info(user_id: int) -> dict:
         'end_date': user['subscription_end'],
         'stripe_customer_id': user['stripe_customer_id'],
         'total_payments': user['total_payments'],
-        'approved': user.get('approved', False)  # AGGIUNTO
+        'approved': user.get('approved', False)
     }
 
 
@@ -521,9 +661,13 @@ def get_stats() -> dict:
     ''')
     monthly_revenue = cur.fetchone()['revenue']
     
-    # AGGIUNTO: Utenti in attesa di approvazione
+    # Utenti in attesa di approvazione
     cur.execute("SELECT COUNT(*) as pending FROM users WHERE subscription_status = 'pending' AND approved = FALSE")
     pending_users = cur.fetchone()['pending']
+    
+    # Numero admin
+    cur.execute("SELECT COUNT(*) as admins FROM admins")
+    total_admins = cur.fetchone()['admins']
     
     conn.close()
     
@@ -533,7 +677,8 @@ def get_stats() -> dict:
         'new_users_week': new_users_week,
         'open_tickets': open_tickets,
         'monthly_revenue': monthly_revenue / 100 if monthly_revenue else 0,
-        'pending_users': pending_users  # AGGIUNTO
+        'pending_users': pending_users,
+        'total_admins': total_admins
     }
 
 
