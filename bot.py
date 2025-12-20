@@ -179,7 +179,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if param.startswith('payment_success_'):
             await update.message.reply_text(
                 "✅ *Grazie per l'acquisto!*\n\n"
-                "Il tuo abbonamento verrà attivato a breve. "
+                "Hai attivato il tuo abbonamento. "
                 "Usa /start per vedere il menu completo.",
                 parse_mode='Markdown'
             )
