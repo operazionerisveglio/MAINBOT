@@ -29,7 +29,7 @@ from config import (
     BOT_TOKEN, LINKS, CHANNEL_LINKS, GROUP_LINKS, MESSAGES, 
     RENEWAL_REMINDER_DAYS, STAFF_ADMIN_CHAT_ID,
     GROUP_IDS, CHANNEL_IDS, STRIPE_WEBHOOK_SECRET,
-    ADMIN_LINKS, SUPER_ADMIN_ID
+    ADMIN_LINKS, SUPER_ADMIN_IDS
 )
 
 # Bot Supporto Tecnico
@@ -1060,7 +1060,7 @@ async def removeadmin_command(update: Update, context: ContextTypes.DEFAULT_TYPE
         await update.message.reply_text("❌ L'user_id deve essere un numero.")
         return
     
-    if target_user_id == SUPER_ADMIN_ID:
+    if target_user_id == SUPER_ADMIN_IDS:
         await update.message.reply_text("❌ Non puoi rimuovere il Super Admin!")
         return
     
