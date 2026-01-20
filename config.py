@@ -91,7 +91,7 @@ CHANNEL_IDS = {
 # =============================================================================
 # Questa lista viene usata come fallback se il database non è disponibile
 ADMIN_IDS = [
-    SUPER_ADMIN_ID,
+    SUPER_ADMIN_IDS,
 ]
 
 # Chat ID per notifiche admin (opzionale)
