@@ -219,8 +219,8 @@ def remove_admin(user_id: int, removed_by: int) -> bool:
         logger.warning(f"Tentativo non autorizzato di rimuovere admin da {removed_by}")
         return False
     
-    if user_id == SUPER_ADMIN_ID:
-        logger.warning("Tentativo di rimuovere il Super Admin!")
+    if user_id in SUPER_ADMIN_IDS:
+        logger.warning("Tentativo di rimuovere un Super Admin!")
         return False
     
     conn = get_connection()
