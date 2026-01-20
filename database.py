@@ -82,11 +82,12 @@ def init_db():
     ''')
     
     # Assicurati che il Super Admin sia sempre presente
-    cur.execute('''
-        INSERT INTO admins (user_id, role, added_by)
-        VALUES (%s, 'super_admin', %s)
-        ON CONFLICT (user_id) DO UPDATE SET role = 'super_admin'
-    ''', (SUPER_ADMIN_ID, SUPER_ADMIN_ID))
+    for super_admin_id in SUPER_ADMIN_IDS:
+        cur.execute('''
+            INSERT INTO admins (user_id, role, added_by)
+            VALUES (%s, 'super_admin', %s)
+            ON CONFLICT (user_id) DO UPDATE SET role = 'super_admin'
+        ''', (super_admin_id, super_admin_id))
     
     # Tabella pagamenti
     cur.execute('''
