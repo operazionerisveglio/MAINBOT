@@ -169,8 +169,8 @@ def is_admin(user_id: int) -> bool:
 
 
 def is_super_admin(user_id: int) -> bool:
-    """Verifica se l'utente è il Super Admin."""
-    return user_id == SUPER_ADMIN_ID
+    """Verifica se l'utente è un Super Admin."""
+    return user_id in SUPER_ADMIN_IDS
 
 
 def add_admin(user_id: int, added_by: int, username: str = None, first_name: str = None) -> bool:
