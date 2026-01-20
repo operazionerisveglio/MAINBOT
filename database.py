@@ -7,7 +7,7 @@ Questo modulo gestisce tutte le operazioni sul database PostgreSQL.
 import psycopg2
 from psycopg2.extras import RealDictCursor
 from datetime import datetime, timedelta
-from config import DATABASE_URL, SUPER_ADMIN_ID
+from config import DATABASE_URL, SUPER_ADMIN_IDS
 import logging
 
 logger = logging.getLogger(__name__)
